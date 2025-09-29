@@ -1,6 +1,26 @@
-# Welcome to your Expo app 👋
+# Swifty Companion 
+**Swifty Companion** is a mobile app designed for students of the 42 school, acting as a personal digital assistant for the 42 Intra network. It lets users securely log in with their 42 account, view their own detailed profile, and easily search for other students to see their information, skills, and project progress.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📱 Features
+
+- 🔑 **OAuth2 Authentication** with the 42 API (no token per request, handled with context & refresh).
+- 🔍 **Search students** by login.
+- 👤 **Profile view** with:
+  - Login, email, phone, wallet, campus location
+  - Profile picture
+  - Current level
+- 📊 **Skills** with level and percentage.
+- 📚 **Projects** (completed + failed).
+- ⚡ **Error handling**.
+- 📐 Responsive UI using **Flexbox**.
+
+
+## 🛠️ Tech Stack
+
+- [React Native](https://reactnative.dev/) + [Expo](https://expo.dev/)
+- [React Navigation](https://reactnavigation.org/)
+- [expo-auth-session](https://docs.expo.dev/versions/latest/sdk/auth-session/) for OAuth
+- [42 API](https://api.intra.42.fr/apidoc)
 
 ## Get started
 
@@ -23,28 +43,3 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
