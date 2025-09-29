@@ -1,11 +1,13 @@
 import UserProfile from "@/src/components/UserProfile";
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
-export default function MyProfileEntry() {
+export default function UserDetails() {
+  const { login } = useLocalSearchParams<{ login: string }>();
   return (
     <View style={styles.container}>
-      <UserProfile mode="me" />
+      {login ? <UserProfile mode="login" login={login} showBack /> : null}
     </View>
   );
 }

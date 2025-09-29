@@ -38,7 +38,11 @@ export default function DashboardLayout() {
             }) => <AntDesign name="user" size={24} color={color} />,
           }}
         />
-        {/* Hide the dynamic profile route from the tab bar/navigation */}
+        {/* Hide the details routes from the tab bar/navigation */}
+        <Tabs.Screen name="details" options={{ href: null }} />
+        <Tabs.Screen name="details/[login]" options={{ href: null }} />
+        <Tabs.Screen name="details/index" options={{ href: null }} />
+        {/* Also hide legacy profile/[login] if present */}
         <Tabs.Screen name="profile/[login]" options={{ href: null }} />
       </Tabs>
     </>

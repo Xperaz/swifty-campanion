@@ -1,6 +1,6 @@
-import { getUser, IntraUser } from "@/src/services/intra";
+import { getMe, getUser, IntraUser } from "@/src/services/intra";
 import { Image } from "expo-image";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -10,21 +10,27 @@ import {
   View,
 } from "react-native";
 
-export default function Profile() {
-  const { login } = useLocalSearchParams<{ login: string }>();
+type Props =
+  | { mode: "me"; showBack?: boolean }
+  | { mode: "login"; login: string; showBack?: boolean };
+
+export default function UserProfile(props: Props) {
   const [user, setUser] = useState<IntraUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const login = props.mode === "login" ? props.login : undefined;
   useEffect(() => {
     let mounted = true;
     const run = async () => {
-      if (!login) return;
+      setLoading(true);
+      setError(null);
       try {
-        const u = await getUser(login);
-        if (mounted) setUser(u);
-      } catch (e: any) {
-        setError(e?.message ?? String(e));
+        const data =
+          props.mode === "me" ? await getMe() : await getUser(login!);
+        if (mounted) setUser(data);
+      } catch (e: unknown) {
+        if (mounted) setError(e instanceof Error ? e.message : String(e));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -33,12 +39,11 @@ export default function Profile() {
     return () => {
       mounted = false;
     };
-  }, [login]);
+  }, [props.mode, login]);
 
   const mainCursus = useMemo(() => {
     if (!user?.cursus_users?.length) return undefined;
-    // Pick the cursus with highest level; fallback to first
-    return [...user.cursus_users].sort(
+    return [...(user.cursus_users ?? [])].sort(
       (a, b) => (b.level ?? 0) - (a.level ?? 0)
     )[0];
   }, [user]);
@@ -57,9 +62,11 @@ export default function Profile() {
       <View style={styles.center}>
         <Text style={styles.errorTitle}>Error</Text>
         <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.link} onPress={() => router.back()}>
-          Go back
-        </Text>
+        {props.showBack && (
+          <Text style={styles.link} onPress={() => router.back()}>
+            Go back
+          </Text>
+        )}
       </View>
     );
   }
@@ -68,9 +75,11 @@ export default function Profile() {
     return (
       <View style={styles.center}>
         <Text>User not found.</Text>
-        <Text style={styles.link} onPress={() => router.back()}>
-          Go back
-        </Text>
+        {props.showBack && (
+          <Text style={styles.link} onPress={() => router.back()}>
+            Go back
+          </Text>
+        )}
       </View>
     );
   }
@@ -126,8 +135,8 @@ export default function Profile() {
         {skills.length === 0 ? (
           <Text style={styles.subtle}>No skills found.</Text>
         ) : (
-          skills.flatMap((s) => {
-            if (!s?.name) return [] as any[];
+          skills.flatMap((s): React.ReactElement[] => {
+            if (!s?.name) return [] as React.ReactElement[];
             const pct = Math.max(0, Math.min(100, ((s.level ?? 0) * 100) / 21));
             return [
               <View key={s.name} style={{ marginBottom: 10 }}>
@@ -150,8 +159,8 @@ export default function Profile() {
           .length === 0 ? (
           <Text style={styles.subtle}>No finished projects.</Text>
         ) : (
-          (user.projects_users ?? []).flatMap((p) => {
-            if (p.status !== "finished") return [] as any[];
+          (user.projects_users ?? []).flatMap((p): React.ReactElement[] => {
+            if (p.status !== "finished") return [] as React.ReactElement[];
             return [
               <View key={p.id} style={styles.row}>
                 <Text style={styles.k}>{p.project?.name ?? `#${p.id}`}</Text>
@@ -171,12 +180,14 @@ export default function Profile() {
         )}
       </View>
 
-      <Text
-        style={[styles.link, { marginBottom: 24 }]}
-        onPress={() => router.back()}
-      >
-        Back
-      </Text>
+      {props.showBack && (
+        <Text
+          style={[styles.link, { marginBottom: 24 }]}
+          onPress={() => router.back()}
+        >
+          Back
+        </Text>
+      )}
     </ScrollView>
   );
 }
@@ -188,6 +199,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
+    backgroundColor: "#fff",
   },
   header: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
   avatar: {
@@ -215,7 +227,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 6,
   },
-
   k: {
     color: "#6b7280",
     maxWidth: "70%",

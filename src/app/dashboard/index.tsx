@@ -30,7 +30,7 @@ const Home = () => {
         const data = await getMe();
         setMe(data);
       } catch (e: any) {
-        console.log("Failed to get me:", e?.message ?? e);
+        console.error("Failed to get me:", e?.message ?? e);
       }
     };
     run();
@@ -60,7 +60,7 @@ const Home = () => {
   }, []);
 
   const onPressUser = useCallback((login: string) => {
-    router.push({ pathname: "/dashboard/profile/[login]", params: { login } });
+    router.push({ pathname: "/dashboard/details/[login]", params: { login } });
   }, []);
 
   const renderItem = useCallback(
