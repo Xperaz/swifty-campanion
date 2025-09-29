@@ -4,6 +4,7 @@ import {
   IntraUser,
   searchUsers,
 } from "@/src/services/intra";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -59,6 +60,13 @@ const Home = () => {
     }, 350);
   }, []);
 
+  const clearQuery = useCallback(() => {
+    setQ("");
+    setResults([]);
+    setError(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+  }, []);
+
   const onPressUser = useCallback((login: string) => {
     router.push({ pathname: "/dashboard/details/[login]", params: { login } });
   }, []);
@@ -82,19 +90,51 @@ const Home = () => {
 
   const keyExtractor = useCallback((item: IntraSearchResult) => item.login, []);
 
+  const hasQuery = q.trim().length > 0;
+  const showEmpty = hasQuery && !loading && !error && results.length === 0;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome{me ? `, ${me.login}` : ""}</Text>
-      <TextInput
-        placeholder="Search 42 users…"
-        value={q}
-        onChangeText={onChangeText}
-        autoCapitalize="none"
-        autoCorrect={false}
-        style={styles.input}
-      />
+      <Text style={styles.subtitle}>Search 42 users</Text>
+
+      <View style={styles.inputWrap}>
+        <AntDesign
+          name="search"
+          size={18}
+          color="#6b7280"
+          style={{ marginRight: 8 }}
+        />
+        <TextInput
+          placeholder="Type a login, e.g. jdoe"
+          value={q}
+          onChangeText={onChangeText}
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={styles.input}
+        />
+        {!!q && (
+          <TouchableOpacity
+            onPress={clearQuery}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <AntDesign name="close" size={18} color="#9ca3af" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {loading && <ActivityIndicator style={{ marginTop: 12 }} />}
       {error && <Text style={styles.error}>{error}</Text>}
+      {showEmpty && (
+        <View style={styles.empty}>
+          <Text style={styles.emptyTitle}>No users found</Text>
+          <Text style={styles.emptyText}>
+            We couldn’t find matches for “{q.trim()}”.
+          </Text>
+        </View>
+      )}
+
+      {results.length > 0 && <Text style={styles.resultsHeader}>Results</Text>}
       <FlatList
         data={results}
         keyExtractor={keyExtractor}
@@ -120,13 +160,24 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 12,
   },
-  input: {
+  subtitle: {
+    color: "#6b7280",
+    marginBottom: 12,
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: "#e5e7eb",
-    borderRadius: 8,
+    backgroundColor: "#f9fafb",
+    borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
+    paddingVertical: 6,
   },
   item: {
     flexDirection: "row",
@@ -148,5 +199,17 @@ const styles = StyleSheet.create({
   error: {
     color: "#ef4444",
     marginTop: 8,
+  },
+  empty: {
+    alignItems: "center",
+    paddingVertical: 24,
+  },
+  emptyTitle: { fontWeight: "700", marginBottom: 4 },
+  emptyText: { color: "#6b7280" },
+  resultsHeader: {
+    marginTop: 8,
+    marginBottom: 4,
+    fontWeight: "700",
+    color: "#374151",
   },
 });

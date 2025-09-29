@@ -15,6 +15,7 @@ export default function DashboardLayout() {
           name="index"
           options={{
             title: "Home",
+            headerShown: false,
             tabBarIcon: ({
               color,
               focused,
@@ -42,7 +43,6 @@ export default function DashboardLayout() {
         <Tabs.Screen name="details" options={{ href: null }} />
         <Tabs.Screen name="details/[login]" options={{ href: null }} />
         <Tabs.Screen name="details/index" options={{ href: null }} />
-        {/* Also hide legacy profile/[login] if present */}
         <Tabs.Screen name="profile/[login]" options={{ href: null }} />
       </Tabs>
     </>

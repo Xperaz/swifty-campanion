@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Image } from "expo-image";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -22,7 +21,8 @@ export default function Index() {
       | string
       | undefined;
     console.log("Client ID:", clientId);
-    console.log("Client Secret:", clientSecret);
+    // Avoid logging secrets in plain text
+    if (clientSecret) console.log("Client Secret present (hidden)");
     if (!clientId || !clientSecret) {
       console.warn("Missing INTRA client env vars. Check .env.local");
       return;
@@ -64,14 +64,28 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.loginContainer}>
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Image
-            source={require("../../assets/icons/42.svg")}
-            style={styles.logo}
-          />
-          <Text style={styles.loginText}>Login with 42</Text>
+      <View style={styles.content}>
+        <View style={styles.heroMark}>
+          <Text style={styles.heroMarkText}>SC</Text>
+        </View>
+        <Text style={styles.title}>Swifty Companion</Text>
+        <Text style={styles.subtitle}>
+          Sign in with your 42 account to explore profiles, skills and projects.
+        </Text>
+
+        <TouchableOpacity style={styles.primaryBtn} onPress={handleLogin}>
+          <View style={styles.badge42}>
+            <Text style={styles.badge42Text}>42</Text>
+          </View>
+          <Text style={styles.primaryBtnText}>Continue with 42</Text>
         </TouchableOpacity>
+
+        <Text style={styles.helpText}>
+          You’ll be redirected to 42 to authorize this app.
+        </Text>
+      </View>
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Made with ❤️ using Expo</Text>
       </View>
     </View>
   );
@@ -81,31 +95,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingTop: 80,
+    paddingBottom: 32,
+  },
+  content: { flex: 1, alignItems: "center", justifyContent: "center" },
+  heroMark: {
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    backgroundColor: "#e5f0ff",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 16,
   },
-  loginContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  heroMarkText: { fontSize: 28, fontWeight: "800", color: "#2563eb" },
+  title: { fontSize: 24, fontWeight: "800", marginBottom: 6, color: "#111827" },
+  subtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 28,
+    paddingHorizontal: 10,
   },
-  loginButton: {
+  primaryBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#00ebf3",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    marginBottom: 20,
+    backgroundColor: "#2563eb",
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
   },
-  logo: {
-    width: 32,
-    height: 32,
+  badge42: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
-  loginText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
+  badge42Text: { fontWeight: "900", fontSize: 16, color: "#2563eb" },
+  primaryBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  helpText: { color: "#6b7280", fontSize: 12, marginTop: 10 },
+  footer: { alignItems: "center" },
+  footerText: { color: "#9ca3af", fontSize: 12 },
 });

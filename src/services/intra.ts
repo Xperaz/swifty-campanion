@@ -1,7 +1,7 @@
 import * as Linking from "expo-linking";
 import { getToken } from "../utlis/storage";
 
-export const INTRA_BASE_URL = "https://api.intra.42.fr";
+export const INTRA_BASE_URL = process.env.EXPO_PUBLIC_INTRA_BASE_URL;
 
 export type TokenResponse = {
   access_token: string;
@@ -44,13 +44,12 @@ export type IntraUser = {
   }[];
   projects_users?: {
     id: number;
-    status: string; // "finished" | "in_progress" | ...
+    status: string;
     "validated?"?: boolean;
     final_mark?: number | null;
     project?: { id: number; name: string };
     marked_at?: string | null;
   }[];
-  // Add more fields from 42 API as needed
 };
 
 export type IntraSearchResult = {
@@ -59,7 +58,6 @@ export type IntraSearchResult = {
 };
 
 export const getRedirectUri = () => {
-  // Prefer explicit env var if provided
   const envRedirect = process.env.EXPO_PUBLIC_INTRA_CLIENT_CALLBACK_URL;
   if (envRedirect) {
     try {
