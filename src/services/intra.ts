@@ -1,5 +1,10 @@
 import * as Linking from "expo-linking";
-import { getToken } from "../utlis/storage";
+import {
+  clearToken,
+  getToken,
+  isTokenExpired,
+  setToken,
+} from "../utlis/storage";
 
 export const INTRA_BASE_URL = process.env.EXPO_PUBLIC_INTRA_BASE_URL;
 
@@ -117,15 +122,64 @@ export async function exchangeCodeForToken(
   return json;
 }
 
-export async function getMe(): Promise<IntraUser> {
-  const token = await getToken();
-  if (!token) {
-    console.error("token not found");
+async function refreshTokenOrThrow(
+  current: TokenResponse
+): Promise<TokenResponse> {
+  const clientId = process.env.EXPO_PUBLIC_INTRA_CLIENT_UID as
+    | string
+    | undefined;
+  const clientSecret = process.env.EXPO_PUBLIC_INTRA_CLIENT_SECRET as
+    | string
+    | undefined;
+  if (!current?.refresh_token || !clientId || !clientSecret) {
+    throw new Error("Missing refresh capability or client credentials");
   }
-  const accessToken = token.access_token;
-  const res = await fetch(`${INTRA_BASE_URL}/v2/me`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+  const body = new URLSearchParams();
+  body.set("grant_type", "refresh_token");
+  body.set("client_id", clientId);
+  body.set("client_secret", clientSecret);
+  body.set("refresh_token", current.refresh_token);
+
+  const res = await fetch(`${INTRA_BASE_URL}/oauth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
   });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Token refresh failed (${res.status}): ${text}`);
+  }
+  const next = (await res.json()) as TokenResponse;
+  // The API may not include created_at; set it so we can compute expiry locally
+  if (!next.created_at) next.created_at = Math.floor(Date.now() / 1000);
+  return next;
+}
+
+async function getValidToken(): Promise<TokenResponse> {
+  const token = await getToken();
+  if (!token) throw new Error("Missing token");
+  if (!isTokenExpired(token)) return token;
+  // try refresh
+  try {
+    const refreshed = await refreshTokenOrThrow(token);
+    await setToken(refreshed);
+    return refreshed;
+  } catch (e) {
+    // If refresh fails, clear token to force a re-login downstream
+    await clearToken();
+    throw e instanceof Error ? e : new Error(String(e));
+  }
+}
+
+async function fetchWithAuth(path: string, init?: RequestInit) {
+  const token = await getValidToken();
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${token.access_token}`);
+  return fetch(path, { ...init, headers });
+}
+
+export async function getMe(): Promise<IntraUser> {
+  const res = await fetchWithAuth(`${INTRA_BASE_URL}/v2/me`);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Fetching user failed (${res.status}): ${text}`);
@@ -146,11 +200,7 @@ export async function searchUsers(
   const url = `${INTRA_BASE_URL}/v2/users?search[login]=${encodeURIComponent(
     query.trim()
   )}&page=${page}&per_page=${perPage}`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token.access_token}`,
-    },
-  });
+  const res = await fetchWithAuth(url);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(
@@ -165,15 +215,10 @@ export async function searchUsers(
 }
 
 export async function getUser(loginOrId: string | number): Promise<IntraUser> {
-  const token = await getToken();
-  if (!token) throw new Error("Missing token");
-  const accessToken = token.access_token;
   const path = `${INTRA_BASE_URL}/v2/users/${encodeURIComponent(
     String(loginOrId)
   )}`;
-  const res = await fetch(path, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const res = await fetchWithAuth(path);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Fetch user failed (${res.status}): ${text}`);

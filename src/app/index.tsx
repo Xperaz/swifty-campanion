@@ -83,7 +83,10 @@ export default function Index() {
         redirectUri,
       });
 
-      await AsyncStorage.setItem("intra_token", JSON.stringify(token));
+      const withCreated = token?.created_at
+        ? token
+        : { ...token, created_at: Math.floor(Date.now() / 1000) };
+      await AsyncStorage.setItem("intra_token", JSON.stringify(withCreated));
       // await AsyncStorage.setItem("access_token", )
 
       // You can navigate now, or store in context
