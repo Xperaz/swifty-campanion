@@ -11,8 +11,13 @@ import {
 } from "react-native";
 
 type Props =
-  | { mode: "me"; showBack?: boolean }
-  | { mode: "login"; login: string; showBack?: boolean };
+  | { mode: "me"; showBack?: boolean; rightAccessory?: React.ReactNode }
+  | {
+      mode: "login";
+      login: string;
+      showBack?: boolean;
+      rightAccessory?: React.ReactNode;
+    };
 
 export default function UserProfile(props: Props) {
   const [user, setUser] = useState<IntraUser | null>(null);
@@ -118,6 +123,9 @@ export default function UserProfile(props: Props) {
             {user.first_name} {user.last_name}
           </Text>
         </View>
+        {props.rightAccessory ? (
+          <View style={styles.headerAction}>{props.rightAccessory}</View>
+        ) : null}
       </View>
 
       <View style={styles.card}>
@@ -202,6 +210,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
+  headerAction: { marginLeft: 8 },
   avatar: {
     width: 80,
     height: 80,

@@ -2,17 +2,53 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   exchangeCodeForToken,
   getAuthorizeUrl,
+  getMe,
   getRedirectUri,
 } from "../services/intra";
+import { getToken } from "../utlis/storage";
 
 // Optional: completes pending auth sessions on Android to avoid stuck browser
 WebBrowser.maybeCompleteAuthSession();
 
 export default function Index() {
+  const [checking, setChecking] = useState(true);
+
+  // If a valid session exists, skip the login screen
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        try {
+          await getMe();
+          if (!cancelled) router.replace("/dashboard");
+          return;
+        } catch {
+          // Token might be expired/invalid; stay on login
+          console.warn("Session check failed, staying on login.");
+        }
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleLogin = async () => {
     const clientId = process.env.EXPO_PUBLIC_INTRA_CLIENT_UID as
       | string
@@ -20,9 +56,6 @@ export default function Index() {
     const clientSecret = process.env.EXPO_PUBLIC_INTRA_CLIENT_SECRET as
       | string
       | undefined;
-    console.log("Client ID:", clientId);
-    // Avoid logging secrets in plain text
-    if (clientSecret) console.log("Client Secret present (hidden)");
     if (!clientId || !clientSecret) {
       console.warn("Missing INTRA client env vars. Check .env.local");
       return;
@@ -30,11 +63,9 @@ export default function Index() {
 
     // Compute a redirect URI that will deep-link back to the app
     const redirectUri = getRedirectUri();
-    console.log("Redirect URI:", redirectUri);
 
     // Open the auth page in a browser and wait for redirect
     const authUrl = getAuthorizeUrl(clientId, redirectUri);
-    console.log("Auth URL:", authUrl);
 
     const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
     console.log("Auth result:", result);
@@ -61,6 +92,19 @@ export default function Index() {
       console.warn("Token exchange failed", e);
     }
   };
+
+  if (checking) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <ActivityIndicator />
+          <Text style={[styles.helpText, { marginTop: 12 }]}>
+            Checking session…
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

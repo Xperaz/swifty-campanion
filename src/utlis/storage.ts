@@ -10,3 +10,11 @@ export const getToken = async () => {
     return null;
   }
 };
+
+export const clearToken = async () => {
+  try {
+    await AsyncStorage.removeItem("intra_token");
+  } catch (error) {
+    console.log(error);
+  }
+};
