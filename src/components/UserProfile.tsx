@@ -119,9 +119,7 @@ export default function UserProfile(props: Props) {
         )}
         <View style={{ flex: 1 }}>
           <Text style={styles.display}>{user.displayname ?? user.login}</Text>
-          <Text style={styles.subtle}>
-            {user.first_name} {user.last_name}
-          </Text>
+          <Text style={styles.subtle}>{user.login}</Text>
         </View>
         {props.rightAccessory ? (
           <View style={styles.headerAction}>{props.rightAccessory}</View>
